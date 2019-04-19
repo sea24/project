@@ -1,0 +1,55 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\China;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
+class RegionController extends Controller
+{
+    //
+    public function getProvince($admin = 0, $default = 0)
+    {
+        if ($admin) {
+            $province = DB::table('china')->where('pid', 0)->get();
+            foreach ($province as $key => $item) {
+                $provinces[$key]['id']   = $item->Id;
+                $provinces[$key]['text'] = $item->Name;
+//                if ($default==$item->Id) {
+//                    $provinces[$key]['selected'] = true;
+//                }
+            }
+
+            return $provinces;
+        }
+        return ['code'=>0, 'message'=>'成功', 'data'=>DB::table('china')->where('pid', 0)->get()];
+    }
+    public function getChild(Request $request, $id = 0, $chindid = 0)
+    {
+        if (isset($request->all()['q'])) {
+            $city =  DB::table('china')
+                ->where('Id', '!=', $id)
+                ->where('pid', $request->all()['q'])->get();
+            foreach ($city as $key => $item) {
+                $provinces[$key]['id']   = $item->Id;
+                $provinces[$key]['text'] = $item->Name;
+//                if ($default==$item->Id) {
+//                    $provinces[$key]['selected'] = true;
+//                }
+            }
+            if ($city->isEmpty()) {
+               return [['id'=>0, 'text'=>'直辖市']];
+            }
+            $provinces = collect($provinces);
+            $defalut = China::where('Id', $id)->first();
+            if (empty($request->all()['q']))
+            {
+                $provinces->prepend([['id'=>$defalut->Id, 'text'=>$defalut->Name]]);
+            }
+            return $provinces;
+        }
+        return ['code'=>0, 'message'=>'成功', 'data'=>DB::table('china')->where('pid', $request->post()['id'])->get()];
+    }
+    
+}
